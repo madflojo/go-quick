@@ -1,0 +1,10 @@
+version: '2'
+services:
+  dockerfile-healthcheck-example:
+    build: .
+    ports:
+      - 443:8443
+    depends_on:
+      - redis
+  redis:
+    image: redis
