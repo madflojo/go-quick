@@ -1,4 +1,4 @@
-// This is an example application to show the power of Dockerfile Health Checks
+// This is an example application to show the power of Health Checks
 package main
 
 import (
@@ -16,6 +16,10 @@ var readyRoute = regexp.MustCompile(`\/ready.*`)
 var healthyRoute = regexp.MustCompile(`\/healthy.*`)
 var kvRoute = regexp.MustCompile(`\/kv.*`)
 
+// Healthy indicators
+var healthy bool
+var ready bool
+
 func main() {
 	// Connect to Redis
 	log.Print("INFO: Connecting to Redis")
@@ -25,6 +29,10 @@ func main() {
 	}
 	defer c.Close()
 	rConn = c
+
+	// Set healthy to true
+	healthy = true
+	ready = true
 
 	// Start Fasthttp listener
 	log.Print("INFO: Starting Fasthttp listener")
@@ -37,6 +45,50 @@ func main() {
 func httpHandler(ctx *fasthttp.RequestCtx) {
 	var rsp []byte
 	var err error
+
+	// If request is to /health
+	if healthyRoute.Match(ctx.Path()) {
+
+		// Fail if healthy global is false
+		if !healthy {
+			log.Printf("CRITICAL: Application shows unhealthy status, returning 500 to liveness probe")
+			ctx.Error("Application in unhealthy state", 500)
+			return
+		}
+
+		// Send data back to client
+		_, err = ctx.Write(rsp)
+		if err != nil {
+			log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
+		}
+		return
+	}
+
+	// If request is to /ready
+	if readyRoute.Match(ctx.Path()) {
+
+		// Fail if ready global is false
+		if !ready {
+			log.Printf("WARNING: Readiness probe requested, application is not ready")
+			ctx.Error("Application is not in ready state", 503)
+			return
+		}
+
+		// Check Redis availability, and fail accordingly
+		_, err = rConn.Do("ECHO", string("ping"))
+		if err != nil {
+			log.Printf("WARNING: Redis ping failed, reverting to non-ready state")
+			ctx.Error("Application is not in ready state", 503)
+			return
+		}
+
+		// Send data back to client
+		_, err = ctx.Write(rsp)
+		if err != nil {
+			log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
+		}
+		return
+	}
 
 	// If request is to /kv
 	if kvRoute.Match(ctx.Path()) {
@@ -61,11 +113,11 @@ func httpHandler(ctx *fasthttp.RequestCtx) {
 			}
 		}
 
-	}
-
-	// Send data back to client
-	_, err = ctx.Write(rsp)
-	if err != nil {
-		log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
+		// Send data back to client
+		_, err = ctx.Write(rsp)
+		if err != nil {
+			log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
+		}
+		return
 	}
 }
