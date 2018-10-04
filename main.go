@@ -5,9 +5,16 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/valyala/fasthttp"
 	"log"
+	"regexp"
 )
 
+// Redis Connection
 var rConn redis.Conn
+
+// Regexs for our routes
+var readyRoute = regexp.MustCompile(`\/ready.*`)
+var healthyRoute = regexp.MustCompile(`\/healthy.*`)
+var kvRoute = regexp.MustCompile(`\/kv.*`)
 
 func main() {
 	// Connect to Redis
@@ -31,24 +38,29 @@ func httpHandler(ctx *fasthttp.RequestCtx) {
 	var rsp []byte
 	var err error
 
-	// If GET retrieve key from Redis
-	if ctx.IsGet() {
-		rsp, err = redis.Bytes(rConn.Do("GET", string(ctx.Path())))
-		if err != nil {
-			log.Printf("INFO: Could not fetch data from Redis - %s", err)
-			ctx.Error("Could not fetch key", 404)
-			return
-		}
-	}
+	// If request is to /kv
+	if kvRoute.Match(ctx.Path()) {
 
-	// If POST insert key into Redis
-	if ctx.IsPost() || ctx.IsPut() {
-		_, err := rConn.Do("SET", string(ctx.Path()), string(ctx.PostBody()))
-		if err != nil {
-			log.Printf("INFO: Could not insert data into Redis - %s", err)
-			ctx.Error("Could not insert key", 500)
-			return
+		// If GET retrieve key from Redis
+		if ctx.IsGet() {
+			rsp, err = redis.Bytes(rConn.Do("GET", string(ctx.Path())))
+			if err != nil {
+				log.Printf("INFO: Could not fetch data from Redis - %s", err)
+				ctx.Error("Could not fetch key", 404)
+				return
+			}
 		}
+
+		// If POST insert key into Redis
+		if ctx.IsPost() || ctx.IsPut() {
+			_, err := rConn.Do("SET", string(ctx.Path()), string(ctx.PostBody()))
+			if err != nil {
+				log.Printf("INFO: Could not insert data into Redis - %s", err)
+				ctx.Error("Could not insert key", 500)
+				return
+			}
+		}
+
 	}
 
 	// Send data back to client

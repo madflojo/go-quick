@@ -8,6 +8,6 @@ RUN go install github.com/madflojo/cloudy-healthchecks-example
 
 # Create a sample SSL Cert
 RUN openssl genrsa -out /etc/ssl/example.key 4096 && \
-    openssl req -x509 -new -nodes -key /etc/ssl/example.key -days 100000 -out /etc/ssl/example.cert -subj '/CN=Dockerfile HealthCheck Example by Madflojo'
+    openssl req -x509 -new -nodes -key /etc/ssl/example.key -days 100000 -out /etc/ssl/example.cert -subj '/CN=Cloudy Health Checks Example by Madflojo'
 
 CMD cloudy-healthchecks-example
