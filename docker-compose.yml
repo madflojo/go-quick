@@ -1,6 +1,6 @@
 version: '2'
 services:
-  cloudy-healthchecks-example:
+  healthchecks-example:
     build: .
     ports:
       - 443:8443
