@@ -1,5 +1,7 @@
-# Dockerfile Health Check Example
+# Cloudy Health Checks Example
 
-This repository holds a very basic Go application that acts as an HTTPS frontend for Redis GET (GET) & SET (POST/PUT) commands. This Go application also implements a `/status` end point that returns `200` if Redis is up and accessible. The `Dockerfile` in this repository uses Health Checks to monitor this end point to see if the Go application is in fact "healthy". 
+This repository holds a very basic Go application that acts as an HTTPS frontend for Redis GET (GET) & SET (POST/PUT) commands available via the `/kv` end point.
 
-This example is the source used within an upcoming CodeShip article about Docker Health Checks.
+This simple application also implements a `/healthy` end point that returns a `200`, to be an example of "Liveness Probes". To show "Readiness Probes" there is a `/ready` end point that only returns a `200` if Redis is up and accessible.
+
+While this code is functioning, it is not meant to be used for anything more than an example. This exists as a example for future Articles and Talks about health checks, readiness, and graceful shutdowns.

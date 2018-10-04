@@ -1,6 +1,6 @@
 version: '2'
 services:
-  dockerfile-healthcheck-example:
+  cloudy-healthchecks-example:
     build: .
     ports:
       - 443:8443
