@@ -5,7 +5,11 @@ import (
 	"github.com/garyburd/redigo/redis"
 	"github.com/valyala/fasthttp"
 	"log"
+	"os"
+	"os/signal"
 	"regexp"
+	"sync"
+	"syscall"
 )
 
 // Redis Connection
@@ -20,19 +24,41 @@ var kvRoute = regexp.MustCompile(`\/kv.*`)
 var healthy bool
 var ready bool
 
+// Create a global waitgroup
+var waitGroup sync.WaitGroup
+
 func main() {
+	// Set Healty True
+	healthy = true
+
 	// Connect to Redis
 	log.Print("INFO: Connecting to Redis")
 	c, err := redis.Dial("tcp", "redis:6379")
 	if err != nil {
 		log.Printf("CRITICAL: Could not connect to redis - %s", err)
+		healthy = false
 	}
 	defer c.Close()
 	rConn = c
 
-	// Set healthy to true
-	healthy = true
+	// Set Ready True
 	ready = true
+
+	// Create a signal trap, and shutdown cleanly
+	trap := make(chan os.Signal, 1)
+	signal.Notify(trap, syscall.SIGTERM)
+	// Run a process in the background that waits for signals and then initiates a shutdown
+	go func() {
+		// wait for a signal
+		s := <-trap
+		log.Printf("INFO: Got shutdown signal %s, shutting down now", s)
+		// unset ready
+		ready = false
+		log.Print("INFO: Application set to non-ready state")
+		// wait for outstanding requests to finish
+		waitGroup.Wait()
+		os.Exit(0)
+	}()
 
 	// Start Fasthttp listener
 	log.Print("INFO: Starting Fasthttp listener")
@@ -46,6 +72,10 @@ func httpHandler(ctx *fasthttp.RequestCtx) {
 	var rsp []byte
 	var err error
 
+	// Add active request to waitgroup and remove when done
+	waitGroup.Add(1)
+	defer waitGroup.Done()
+
 	// If request is to /health
 	if healthyRoute.Match(ctx.Path()) {
 
@@ -56,11 +86,6 @@ func httpHandler(ctx *fasthttp.RequestCtx) {
 			return
 		}
 
-		// Send data back to client
-		_, err = ctx.Write(rsp)
-		if err != nil {
-			log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
-		}
 		return
 	}
 
@@ -77,16 +102,11 @@ func httpHandler(ctx *fasthttp.RequestCtx) {
 		// Check Redis availability, and fail accordingly
 		_, err = rConn.Do("ECHO", string("ping"))
 		if err != nil {
-			log.Printf("WARNING: Redis ping failed, reverting to non-ready state")
+			log.Printf("WARNING: Redis ping failed, returning 503 to readiness probe")
 			ctx.Error("Application is not in ready state", 503)
 			return
 		}
 
-		// Send data back to client
-		_, err = ctx.Write(rsp)
-		if err != nil {
-			log.Printf("INFO: Could not write response on connection - %d", ctx.ID())
-		}
 		return
 	}
 

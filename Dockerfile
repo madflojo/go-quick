@@ -10,4 +10,4 @@ RUN go install github.com/madflojo/cloudy-healthchecks-example
 RUN openssl genrsa -out /etc/ssl/example.key 4096 && \
     openssl req -x509 -new -nodes -key /etc/ssl/example.key -days 100000 -out /etc/ssl/example.cert -subj '/CN=Cloudy Health Checks Example by Madflojo'
 
-CMD cloudy-healthchecks-example
+CMD ["cloudy-healthchecks-example"]
