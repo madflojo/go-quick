@@ -3,9 +3,6 @@ go:
   - 1.14.1
 os:
   - linux
-before_script:
-  - go get golang.org/x/tools/cmd/cover
-  - go get github.com/mattn/goveralls
 script:
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
   - go vet -v ./...
