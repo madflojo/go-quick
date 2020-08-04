@@ -1,0 +1,17 @@
+version: '2'
+services:
+  healthchecks-example:
+    build: .
+    ports:
+      - 443:8443
+  tests:
+    build: .
+    working_dir: /go/src/github.com/madflojo/healthchecks-example
+    entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
+    volumes:
+      - "./coverage:/tmp/coverage"
+    environment:
+      - "ENABLE_TLS=false"
+
+volumes:
+  coverage:

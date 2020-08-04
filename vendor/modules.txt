@@ -1,0 +1,16 @@
+# github.com/caarlos0/env/v6 v6.3.0
+## explicit
+github.com/caarlos0/env/v6
+# github.com/julienschmidt/httprouter v1.3.0
+## explicit
+github.com/julienschmidt/httprouter
+# github.com/konsorten/go-windows-terminal-sequences v1.0.3
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/madflojo/testcerts v0.0.0-20190712041726-f8fee566dcb6
+## explicit
+github.com/madflojo/testcerts
+# github.com/sirupsen/logrus v1.6.0
+## explicit
+github.com/sirupsen/logrus
+# golang.org/x/sys v0.0.0-20190422165155-953cdadca894
+golang.org/x/sys/unix

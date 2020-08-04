@@ -1,11 +1,17 @@
-# Health Checks Example
+# Health Checks Example - In Go
 
-This repository holds a very basic Go application that acts as an HTTPS frontend for Redis GET (GET) & SET (POST/PUT) 
-commands available via the `/kv` end point.
+This project is a base example for an HTTP Hello World service written in Go. What sets this example apart is that it 
+emphasizes resiliency features.
 
-This simple application also implements a `/healthy` end point that returns a `200`, to be an example of "Liveness 
-Probes". To show "Readiness Probes" there is a `/ready` end point that only returns a `200` if Redis is up and 
-accessible.
+Those features are as follows:  
 
-While this code is functioning, it is not meant to be used for anything more than an example. This exists as a example 
-for future Articles and Talks about health checks, readiness, and graceful shutdowns.
+- Liveness probe support via `/health` end-point 
+- Readiness probe support via `/ready` end-point 
+- Graceful shutdown with SIGTERM signal trap  
+
+TODO:
+
+- Add basic metrics 
+- Add tracing via OpenTracing
+
+If you are looking to start a simple Go HTTP service, you could fork this repository and start from there.

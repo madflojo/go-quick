@@ -4,7 +4,7 @@ services:
     build: .
     ports:
       - 443:8443
-    depends_on:
-      - redis
-  redis:
-    image: redis
+      - 80:8080
+    environment:
+      - "ENABLE_TLS=false"
+      - "LISTEN_ADDR=0.0.0.0:8080"
