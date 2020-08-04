@@ -4,17 +4,17 @@ Health Checks Example - In Go
 This project is a base example for an HTTP Hello World service written in Go. What sets this example apart is that it emphasizes resiliency features.
 
 
-Those features are as follows:  
+Those features are as follows:
 
-- Liveness probe support via `/health` end-point 
+- Liveness probe support via `/health` end-point
 
-- Readiness probe support via `/ready` end-point 
+- Readiness probe support via `/ready` end-point
 
-- Graceful shutdown with SIGTERM signal trap  
+- Graceful shutdown with SIGTERM signal trap
 
 TODO:
 
-- Add basic metrics 
+- Add basic metrics
 
 - Add tracing via OpenTracing
 
