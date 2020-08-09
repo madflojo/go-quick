@@ -105,5 +105,5 @@ func (s *server) SetHello(w http.ResponseWriter, r *http.Request, ps httprouter.
 	}
 
 	w.WriteHeader(http.StatusOK)
-	fmt.Fprint(w, "%s", "Success")
+	fmt.Fprintf(w, "%s", "Success")
 }
