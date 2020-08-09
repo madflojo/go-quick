@@ -17,6 +17,7 @@ func TestBadConfigs(t *testing.T) {
 		EnableTLS:      false,
 		ListenAddr:     "pandasdonotbelonghere",
 		DisableLogging: true,
+		DBServer:       "redis:6379",
 	}
 	cfgs["invalid TLS Config"] = config.Config{
 		EnableTLS:      true,
@@ -24,6 +25,7 @@ func TestBadConfigs(t *testing.T) {
 		KeyFile:        "/tmp/doesntexist",
 		ListenAddr:     "0.0.0.0:8443",
 		DisableLogging: true,
+		DBServer:       "redis:6379",
 	}
 
 	// Loop through bad configs, creating sub-tests as we go
@@ -53,6 +55,7 @@ func TestRunningServer(t *testing.T) {
 			EnableTLS:      false,
 			ListenAddr:     "localhost:9000",
 			DisableLogging: true,
+			DBServer:       "redis:6379",
 		})
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
@@ -97,6 +100,7 @@ func TestRunningTLSServer(t *testing.T) {
 			CertFile:       "/tmp/cert",
 			KeyFile:        "/tmp/key",
 			DisableLogging: true,
+			DBServer:       "redis:6379",
 		})
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
