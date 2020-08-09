@@ -6,4 +6,4 @@ os:
 script:
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
   - go vet -v ./...
-  - docker-compose -f dev-compose up --build tests
+  - docker-compose -f dev-compose.yml up --build tests
