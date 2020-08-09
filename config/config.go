@@ -31,6 +31,9 @@ type Config struct {
 	// KeyFile specifies the location of the TLS key file. This is used only if TLS
 	// is Enabled.
 	KeyFile string `env:"KEY_FILE"`
+
+	// DBServer specifies the Database server and port address.
+	DBServer string `env:"DB_SERVER"`
 }
 
 // New will create a new Config instance with strong defaults.

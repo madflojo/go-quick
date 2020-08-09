@@ -4,6 +4,15 @@ services:
     build: .
     ports:
       - 443:8443
+      - 80:8080
+    environment:
+      - "ENABLE_TLS=false"
+      - "LISTEN_ADDR=0.0.0.0:8080"
+      - "DB_SERVER=redis:6379"
+      - "DEBUG=true"
+    depends_on:
+      - redis
+  redis:
   tests:
     build: .
     working_dir: /go/src/github.com/madflojo/healthchecks-example
@@ -12,6 +21,13 @@ services:
       - "./coverage:/tmp/coverage"
     environment:
       - "ENABLE_TLS=false"
+      - "DB_SERVER=redis:6379"
+    depends_on:
+      - redis
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
 
 volumes:
   coverage:

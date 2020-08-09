@@ -8,3 +8,10 @@ services:
     environment:
       - "ENABLE_TLS=false"
       - "LISTEN_ADDR=0.0.0.0:8080"
+      - "DB_SERVER=redis:6379"
+    depends_on:
+      - redis
+  redis:
+    image: bitnami/redis:latest
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes

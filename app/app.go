@@ -9,6 +9,8 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"github.com/madflojo/healthchecks-example/config"
+	"github.com/madflojo/hord"
+	"github.com/madflojo/hord/drivers/redis"
 	"github.com/sirupsen/logrus"
 	"net/http"
 	"os"
@@ -23,6 +25,9 @@ var (
 
 // srv is the global reference for the HTTP Server.
 var srv *server
+
+// db is the global reference for the DB Server.
+var db hord.Database
 
 // runCtx is a global context used to control shutdown of the application.
 var runCtx context.Context
@@ -55,6 +60,21 @@ func Run(c config.Config) error {
 	}
 	if cfg.DisableLogging {
 		log.Level = logrus.FatalLevel
+	}
+
+	// Setup the DB Connection
+	db, err = redis.Dial(redis.Config{
+		Server: cfg.DBServer,
+	})
+	if err != nil {
+		return fmt.Errorf("could not establish database connection - %s", err)
+	}
+	defer db.Close()
+
+	// Initialize the DB
+	err = db.Setup()
+	if err != nil {
+		return fmt.Errorf("could not setup database - %s", err)
 	}
 
 	// Setup the HTTP Server
@@ -93,6 +113,9 @@ func Run(c config.Config) error {
 			log.Errorf("Received errors when shutting down HTTP sessions %s", err)
 		}
 
+		// Close DB Sessions
+		db.Close()
+
 		// Shutdown the app via runCtx
 		runCancel()
 	}()
@@ -105,6 +128,8 @@ func Run(c config.Config) error {
 
 	// Register Hello World Handler
 	srv.httpRouter.GET("/hello", srv.middleware(srv.Hello))
+	srv.httpRouter.POST("/hello", srv.middleware(srv.SetHello))
+	srv.httpRouter.PUT("/hello", srv.middleware(srv.SetHello))
 
 	// Start HTTP Listener
 	log.Infof("Starting Listener on %s", cfg.ListenAddr)

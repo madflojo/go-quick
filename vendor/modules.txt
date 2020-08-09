@@ -1,11 +1,20 @@
+# github.com/FZambia/sentinel v1.1.0
+github.com/FZambia/sentinel
 # github.com/caarlos0/env/v6 v6.3.0
 ## explicit
 github.com/caarlos0/env/v6
+# github.com/gomodule/redigo v2.0.0+incompatible
+github.com/gomodule/redigo/internal
+github.com/gomodule/redigo/redis
 # github.com/julienschmidt/httprouter v1.3.0
 ## explicit
 github.com/julienschmidt/httprouter
 # github.com/konsorten/go-windows-terminal-sequences v1.0.3
 github.com/konsorten/go-windows-terminal-sequences
+# github.com/madflojo/hord v0.0.0-20200405232254-8faf9597e204
+## explicit
+github.com/madflojo/hord
+github.com/madflojo/hord/drivers/redis
 # github.com/madflojo/testcerts v0.0.0-20190712041726-f8fee566dcb6
 ## explicit
 github.com/madflojo/testcerts
