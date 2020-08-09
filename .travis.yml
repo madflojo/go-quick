@@ -6,5 +6,4 @@ os:
 script:
   - gofmt -l ./ | grep -v vendor | wc -l | grep -q 0
   - go vet -v ./...
-  - go test -v -covermode=count -coverprofile=coverage.out ./...
-  - docker-compose up --build -d 
+  - docker-compose -f dev-compose up --build tests
