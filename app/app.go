@@ -64,7 +64,8 @@ func Run(c config.Config) error {
 
 	// Setup the DB Connection
 	db, err = redis.Dial(redis.Config{
-		Server: cfg.DBServer,
+		Server:   cfg.DBServer,
+		Password: cfg.DBPassword,
 	})
 	if err != nil {
 		return fmt.Errorf("could not establish database connection - %s", err)

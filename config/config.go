@@ -34,6 +34,9 @@ type Config struct {
 
 	// DBServer specifies the Database server and port address.
 	DBServer string `env:"DB_SERVER"`
+
+	// DBPassword specifies the Database password if defined.
+	DBPassword string `env:"DB_PASS"`
 }
 
 // New will create a new Config instance with strong defaults.
