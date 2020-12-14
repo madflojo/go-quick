@@ -8,7 +8,7 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"go-quick/config"
+	"github.com/madflojo/go-quick/config"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/redis"
 	"github.com/sirupsen/logrus"

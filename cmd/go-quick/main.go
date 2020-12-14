@@ -1,8 +1,8 @@
 package main
 
 import (
-	"go-quick/app"
-	"go-quick/config"
+	"github.com/madflojo/go-quick/app"
+	"github.com/madflojo/go-quick/config"
 	"github.com/sirupsen/logrus"
 )
 
