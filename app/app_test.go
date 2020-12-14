@@ -3,7 +3,7 @@ package app
 import (
 	"context"
 	"crypto/tls"
-	"github.com/madflojo/healthchecks-example/config"
+	"github.com/madflojo/go-quick/config"
 	"github.com/madflojo/testcerts"
 	"net/http"
 	"os"

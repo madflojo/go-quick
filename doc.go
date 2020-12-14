@@ -1,16 +1,18 @@
 /*
-Health Checks Example - In Go
+Go Quick
 
-This project is a base example for an HTTP Hello World service written in Go. What sets this example apart is that it emphasizes resiliency features.
+This project is a template repository that contains an example HTTPS Hello World API written in Go. The goal of this project is to help new developers learn how to structure Go applications by example. As well as provide a production-ready base application that anyone can fork and run.
 
-
-Those features are as follows:
+The main features of this template are:
 
 - Liveness probe support via `/health` end-point
 
 - Readiness probe support via `/ready` end-point
 
-- Graceful shutdown with SIGTERM signal trap
+- Graceful shutdown with a SIGTERM signal trap
+
+- Modular Key-Value Database integration using https://github.com/madflojo/hord
+
 
 TODO:
 
@@ -18,8 +20,6 @@ TODO:
 
 - Add tracing via OpenTracing
 
-
-If you are looking to start a simple Go HTTP service, you could fork this repository and start from there.
 
 */
 package example

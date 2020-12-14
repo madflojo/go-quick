@@ -1,6 +1,6 @@
 version: '2'
 services:
-  healthchecks-example:
+  go-quick:
     build: .
     ports:
       - 443:8443
@@ -15,7 +15,7 @@ services:
   redis:
   tests:
     build: .
-    working_dir: /go/src/github.com/madflojo/healthchecks-example
+    working_dir: /go/src/github.com/madflojo/go-quick
     entrypoint: go test -v -covermode=count -coverprofile=/tmp/coverage/coverage.out ./...
     volumes:
       - "./coverage:/tmp/coverage"

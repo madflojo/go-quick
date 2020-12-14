@@ -1,5 +1,5 @@
 #!/bin/bash
-## Entrypoint script for healthchecks-example. This script is to show how to write 
+## Entrypoint script for go-quick. This script is to show how to write 
 ## an entrypoint script that actually passes down signals from Docker.
 
 ## Load our DB Password into a runtime only Environment Variable
@@ -11,4 +11,4 @@ then
 fi
 
 ## Run the Application
-exec healthchecks-example
+exec go-quick

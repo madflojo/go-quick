@@ -1,6 +1,6 @@
 version: '3.8'
 services:
-  healthchecks-example:
+  go-quick:
     build: .
     ports:
       - 443:8443
