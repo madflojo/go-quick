@@ -3,8 +3,8 @@ package app
 import (
 	"context"
 	"crypto/tls"
-	"github.com/madflojo/go-quick/config"
 	"github.com/madflojo/testcerts"
+	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"testing"
@@ -12,21 +12,25 @@ import (
 )
 
 func TestBadConfigs(t *testing.T) {
-	cfgs := make(map[string]config.Config)
-	cfgs["invalid listener address"] = config.Config{
-		EnableTLS:      false,
-		ListenAddr:     "pandasdonotbelonghere",
-		DisableLogging: true,
-		DBServer:       "redis:6379",
-	}
-	cfgs["invalid TLS Config"] = config.Config{
-		EnableTLS:      true,
-		CertFile:       "/tmp/doesntexist",
-		KeyFile:        "/tmp/doesntexist",
-		ListenAddr:     "0.0.0.0:8443",
-		DisableLogging: true,
-		DBServer:       "redis:6379",
-	}
+	cfgs := make(map[string]*viper.Viper)
+
+	// Invalid Listener Address
+	v := viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "pandasdonotbelonghere")
+	v.Set("disable_logging", true)
+	v.Set("db_server", "redis:6379")
+	cfgs["invalid listener address"] = v
+
+	// Invalid TLS config
+	v = viper.New()
+	v.Set("enable_tls", true)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("db_server", "redis:6379")
+	v.Set("cert_file", "/tmp/doesntexist")
+	v.Set("key_file", "/tmp/doesntexist")
+	cfgs["invalid TLS Config"] = v
 
 	// Loop through bad configs, creating sub-tests as we go
 	for k, v := range cfgs {
@@ -49,14 +53,13 @@ func TestBadConfigs(t *testing.T) {
 }
 
 func TestRunningServer(t *testing.T) {
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("listen_addr", "localhost:9000")
+	cfg.Set("db_server", "redis:6379")
+	cfg.Set("config_watch_interval", 5)
 	go func() {
-		err := Run(config.Config{
-			Debug:          true,
-			EnableTLS:      false,
-			ListenAddr:     "localhost:9000",
-			DisableLogging: true,
-			DBServer:       "redis:6379",
-		})
+		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
@@ -76,6 +79,12 @@ func TestRunningServer(t *testing.T) {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
 	})
+
+	t.Run("Check Scheduler is set", func(t *testing.T) {
+		if len(scheduler.Tasks()) == 0 {
+			t.Errorf("Expected scheduler to have at least one task")
+		}
+	})
 }
 
 func TestRunningTLSServer(t *testing.T) {
@@ -91,17 +100,18 @@ func TestRunningTLSServer(t *testing.T) {
 	// Disable Host Checking globally
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 
+	// Setup Config
+	cfg := viper.New()
+	cfg.Set("disable_logging", true)
+	cfg.Set("enable_tls", true)
+	cfg.Set("cert_file", "/tmp/cert")
+	cfg.Set("key_file", "/tmp/key")
+	cfg.Set("db_server", "redis:6379")
+	cfg.Set("listen_addr", "localhost:9000")
+
 	// Start Server in goroutine
 	go func() {
-		err := Run(config.Config{
-			Debug:          true,
-			EnableTLS:      true,
-			ListenAddr:     "localhost:9000",
-			CertFile:       "/tmp/cert",
-			KeyFile:        "/tmp/key",
-			DisableLogging: true,
-			DBServer:       "redis:6379",
-		})
+		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}

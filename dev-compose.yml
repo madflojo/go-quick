@@ -6,13 +6,19 @@ services:
       - 443:8443
       - 80:8080
     environment:
-      - "ENABLE_TLS=false"
-      - "LISTEN_ADDR=0.0.0.0:8080"
-      - "DB_SERVER=redis:6379"
-      - "DEBUG=true"
+      - "APP_ENABLE_TLS=false"
+      - "APP_LISTEN_ADDR=0.0.0.0:8080"
+      - "APP_DB_SERVER=redis:6379"
+      - "APP_DEBUG=true"
+      - "APP_USE_CONSUL=true"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=go-quick/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
     depends_on:
       - redis
-  redis:
+      - consul
+      - consulator
   tests:
     build: .
     working_dir: /go/src/github.com/madflojo/go-quick
@@ -20,14 +26,28 @@ services:
     volumes:
       - "./coverage:/tmp/coverage"
     environment:
-      - "ENABLE_TLS=false"
-      - "DB_SERVER=redis:6379"
+      - "APP_ENABLE_TLS=false"
+      - "APP_DB_SERVER=redis:6379"
     depends_on:
       - redis
   redis:
     image: bitnami/redis:latest
     environment:
       - ALLOW_EMPTY_PASSWORD=yes
+  consul:
+    image: consul
+    ports:
+      - 8500:8500
+  consulator:
+    image: lewispeckover/consulator
+    command: "import /app/go-quick-consul.yml"
+    depends_on:
+      - consul
+    volumes:
+      - "./:/app"
+    environment:
+      - "CONSUL_HTTP_ADDR=consul:8500"
+      - "CONSUL_HTTP_SSL=false"
 
 volumes:
   coverage:
