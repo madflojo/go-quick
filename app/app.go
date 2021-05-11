@@ -8,14 +8,16 @@ import (
 	"crypto/tls"
 	"fmt"
 	"github.com/julienschmidt/httprouter"
-	"github.com/madflojo/go-quick/config"
 	"github.com/madflojo/hord"
 	"github.com/madflojo/hord/drivers/redis"
+	"github.com/madflojo/tasks"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 // Common errors returned by this app.
@@ -36,14 +38,17 @@ var runCtx context.Context
 var runCancel context.CancelFunc
 
 // cfg is used across the app package to contain configuration.
-var cfg config.Config
+var cfg *viper.Viper
 
 // log is used across the app package for logging.
 var log *logrus.Logger
 
+// scheduler is a internal task scheduler for recurring tasks
+var scheduler *tasks.Scheduler
+
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
-func Run(c config.Config) error {
+func Run(c *viper.Viper) error {
 	var err error
 
 	// Create App Context
@@ -54,18 +59,53 @@ func Run(c config.Config) error {
 
 	// Initiate the logger
 	log = logrus.New()
-	if cfg.Debug {
+	if cfg.GetBool("debug") {
 		log.Level = logrus.DebugLevel
 		log.Debug("Enabling Debug Logging")
 	}
-	if cfg.DisableLogging {
+	if cfg.GetBool("trace") {
+		log.Level = logrus.TraceLevel
+		log.Debug("Enabling Trace Logging")
+	}
+	if cfg.GetBool("disable_logging") {
 		log.Level = logrus.FatalLevel
+	}
+
+	// Setup Scheduler
+	scheduler = tasks.New()
+	defer scheduler.Stop()
+
+	// Config Reload
+	if cfg.GetInt("config_watch_interval") > 0 {
+		_, err = scheduler.Add(&tasks.Task{
+			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
+			TaskFunc: func() error {
+				err := cfg.WatchRemoteConfig()
+				if err != nil {
+					return err
+				}
+				// Support hot enable/disable of debug logging
+				if cfg.GetBool("debug") {
+					log.Level = logrus.DebugLevel
+				}
+				// Support hot enable/disable of trace logging
+				if cfg.GetBool("trace") {
+					log.Level = logrus.TraceLevel
+				}
+				// Support hot enable/disable of all logging
+				if cfg.GetBool("disable_logging") {
+					log.Level = logrus.FatalLevel
+				}
+				log.Tracef("Config reloaded from Consul")
+				return nil
+			},
+		})
 	}
 
 	// Setup the DB Connection
 	db, err = redis.Dial(redis.Config{
-		Server:   cfg.DBServer,
-		Password: cfg.DBPassword,
+		Server:   cfg.GetString("db_server"),
+		Password: cfg.GetString("db_password"),
 	})
 	if err != nil {
 		return fmt.Errorf("could not establish database connection - %s", err)
@@ -83,12 +123,12 @@ func Run(c config.Config) error {
 		httpRouter: httprouter.New(),
 	}
 	srv.httpServer = &http.Server{
-		Addr:    cfg.ListenAddr,
+		Addr:    cfg.GetString("listen_addr"),
 		Handler: srv.httpRouter,
 	}
 
 	// Setup TLS Configuration
-	if cfg.EnableTLS {
+	if cfg.GetBool("enable_tls") {
 		srv.httpServer.TLSConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			CipherSuites: []uint16{
@@ -133,9 +173,9 @@ func Run(c config.Config) error {
 	srv.httpRouter.PUT("/hello", srv.middleware(srv.SetHello))
 
 	// Start HTTP Listener
-	log.Infof("Starting Listener on %s", cfg.ListenAddr)
-	if cfg.EnableTLS {
-		err := srv.httpServer.ListenAndServeTLS(cfg.CertFile, cfg.KeyFile)
+	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))
+	if cfg.GetBool("enable_tls") {
+		err := srv.httpServer.ListenAndServeTLS(cfg.GetString("cert_file"), cfg.GetString("key_file"))
 		if err != nil {
 			if err == http.ErrServerClosed {
 				// Wait until all outstanding requests are done

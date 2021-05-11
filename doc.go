@@ -1,25 +1,17 @@
 /*
 Go Quick
 
-This project is a template repository that contains an example HTTPS Hello World API written in Go. The goal of this project is to help new developers learn how to structure Go applications by example. As well as provide a production-ready base application that anyone can fork and run.
+This project is a boilerplate web application written in Go (Golang).
 
-The main features of this template are:
+Starting a new Go Project and wish you had a basic application you could use as a starting point? Want to learn Go but don't know how to structure your project?
 
-- Liveness probe support via `/health` end-point
+The goal of this project is to be all of those things. A clean, straightforward project that offers power users everything they need to start a new Go application. While also providing folks new to Go an example of a well-structured application.
 
-- Readiness probe support via `/ready` end-point
+The easiest way to get started with this project is to run it locally via Docker Compose. Just follow the instructions below, and you will have an entire local instance with dependencies running.
 
-- Graceful shutdown with a SIGTERM signal trap
+  $ docker compose up go-quick
 
-- Modular Key-Value Database integration using https://github.com/madflojo/hord
-
-
-TODO:
-
-- Add basic metrics
-
-- Add tracing via OpenTracing
-
+Once running, you can interact with the API via http://localhost/hello
 
 */
 package example

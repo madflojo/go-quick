@@ -1,0 +1,2 @@
+go-quick:
+  config: '{"from_consul": true}'

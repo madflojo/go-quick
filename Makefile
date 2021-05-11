@@ -8,3 +8,7 @@ tests:
 clean:
 	@echo "Cleaning up build junk"
 	-docker-compose -f dev-compose.yml down
+
+go-quick:
+	@echo "Starting Application"
+	docker-compose -f dev-compose.yml up --build go-quick
