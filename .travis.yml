@@ -1,6 +1,4 @@
 language: go
-go:
-  - 1.14.1
 os:
   - linux
 env:
