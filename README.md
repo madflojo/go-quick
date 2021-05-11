@@ -1,5 +1,10 @@
 # Go Quick
 
+[![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/go-quick)](https://pkg.go.dev/github.com/madflojo/go-quick)
+[![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/go-quick)](https://goreportcard.com/report/github.com/madflojo/go-quick)
+[![Build Status](https://travis-ci.com/madflojo/go-quick.svg?branch=main)](https://travis-ci.com/madflojo/go-quick)
+[![Coverage Status](https://coveralls.io/repos/github/madflojo/go-quick/badge.svg)](https://coveralls.io/github/madflojo/go-quick)
+
 This project is a boilerplate web application written in Go (Golang).
 
 Starting a new Go Project and wish you had a basic application you could use as a starting point? Want to learn Go but don't know how to structure your project?
@@ -8,9 +13,9 @@ The goal of this project is to be all of those things. A clean, straightforward 
 
 ## Features
 
-* Environment Variable and/or HashiCorp Consul-based configuration using [spf13/viper](https://github.com/spf13/viper)
-* Modular Key-Value Database integration using [madflojo/hord](https://github.com/madflojo/hord)
-* Internal task scheduler for recurring tasks using [madflojo/tasks](https://github.com/madflojo/tasks)
+* Environment Variable and/or HashiCorp Consul-based configuration ([spf13/viper](https://github.com/spf13/viper))
+* Modular Key-Value Database integration ([madflojo/hord](https://github.com/madflojo/hord))
+* Internal task scheduler for recurring tasks ([madflojo/tasks](https://github.com/madflojo/tasks))
 * Live Enable/Disable of debug logging when using Consul for configuration
 * Service Resiliency
   - Liveness probe support via `/health` end-point
