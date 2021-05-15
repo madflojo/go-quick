@@ -58,6 +58,8 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("config_watch_interval", 5)
+	cfg.Set("debug", true)
+	cfg.Set("trace", true)
 	go func() {
 		err := Run(cfg)
 		if err != nil && err != ErrShutdown {
@@ -104,6 +106,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	cfg.Set("enable_tls", true)
+	cfg.Set("enable_consul", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
 	cfg.Set("db_server", "redis:6379")
@@ -140,6 +143,20 @@ func TestRunningTLSServer(t *testing.T) {
 			t.FailNow()
 		}
 		if r.StatusCode != 200 {
+			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
+		}
+	})
+
+	// Kill the DB sessions for unhappy path testing
+	db.Close()
+
+	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
+		r, err := http.Get("https://localhost:9000/ready")
+		if err != nil {
+			t.Errorf("Unexpected error when requesting ready status - %s", err)
+			t.FailNow()
+		}
+		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
 	})

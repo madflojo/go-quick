@@ -54,10 +54,10 @@ func Run(c *viper.Viper) error {
 	// Create App Context
 	runCtx, runCancel = context.WithCancel(context.Background())
 
-	// Apply config provided by main
+	// Apply config provided by main to the package global
 	cfg = c
 
-	// Initiate the logger
+	// Initiate a new logger
 	log = logrus.New()
 	if cfg.GetBool("debug") {
 		log.Level = logrus.DebugLevel
@@ -80,22 +80,27 @@ func Run(c *viper.Viper) error {
 		_, err = scheduler.Add(&tasks.Task{
 			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
 			TaskFunc: func() error {
+				// Reload config using Viper's Watch capabilities
 				err := cfg.WatchRemoteConfig()
 				if err != nil {
 					return err
 				}
+
 				// Support hot enable/disable of debug logging
 				if cfg.GetBool("debug") {
 					log.Level = logrus.DebugLevel
 				}
+
 				// Support hot enable/disable of trace logging
 				if cfg.GetBool("trace") {
 					log.Level = logrus.TraceLevel
 				}
+
 				// Support hot enable/disable of all logging
 				if cfg.GetBool("disable_logging") {
 					log.Level = logrus.FatalLevel
 				}
+
 				log.Tracef("Config reloaded from Consul")
 				return nil
 			},

@@ -17,12 +17,14 @@ type server struct {
 	httpRouter *httprouter.Router
 }
 
-// Health is used to handle HTTP Health requests to this service.
+// Health is used to handle HTTP Health requests to this service. Use this for liveness
+// probes or any other checks which only validate if the services is running.
 func (s *server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Ready is used to handle HTTP Ready requests to this service.
+// Ready is used to handle HTTP Ready requests to this service. Use this for readiness
+// probes or any checks that validate the service is ready to accept traffic.
 func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Check other stuff here like DB connectivity, health of dependent services, etc.
 	err := db.HealthCheck()
@@ -68,14 +70,14 @@ func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		return
 	}
 
+	w.WriteHeader(http.StatusOK)
+
 	// Print greeting or say hello
 	if len(g) > 0 {
 		fmt.Fprintf(w, "%s", g)
 		return
 	}
 	fmt.Fprintf(w, "%s", "Hello World")
-
-	w.WriteHeader(http.StatusOK)
 }
 
 // SetHello will handle any update requests to /hello to store our greating.

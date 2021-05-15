@@ -28,8 +28,13 @@ services:
     environment:
       - "APP_ENABLE_TLS=false"
       - "APP_DB_SERVER=redis:6379"
+      - "APP_CONSUL_ADDR=consul:8500"
+      - "APP_CONSUL_KEYS_PREFIX=go-quick/config"
+      - "CONSUL_HTTP_SSL=false"
     depends_on:
       - redis
+      - consul
+      - consulator
   redis:
     image: bitnami/redis:latest
     environment:
