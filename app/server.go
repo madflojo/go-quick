@@ -53,8 +53,6 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 
 // Hello will handle any requests to /hello with a greating.
 func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// We will always succeed in saying hello
-	w.WriteHeader(http.StatusOK)
 
 	// Fetch Custom greeting from the DB
 	g, err := db.Get("greeting")
@@ -66,6 +64,8 @@ func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 			"headers":        r.Header,
 			"content-length": r.ContentLength,
 		}).Debugf("Could not fetch data from database - %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	// Print greeting or say hello
@@ -74,6 +74,8 @@ func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 		return
 	}
 	fmt.Fprintf(w, "%s", "Hello World")
+
+	w.WriteHeader(http.StatusOK)
 }
 
 // SetHello will handle any update requests to /hello to store our greating.
