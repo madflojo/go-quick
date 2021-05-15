@@ -17,12 +17,14 @@ type server struct {
 	httpRouter *httprouter.Router
 }
 
-// Health is used to handle HTTP Health requests to this service.
+// Health is used to handle HTTP Health requests to this service. Use this for liveness
+// probes or any other checks which only validate if the services is running.
 func (s *server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Ready is used to handle HTTP Ready requests to this service.
+// Ready is used to handle HTTP Ready requests to this service. Use this for readiness
+// probes or any checks that validate the service is ready to accept traffic.
 func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Check other stuff here like DB connectivity, health of dependent services, etc.
 	err := db.HealthCheck()
@@ -53,8 +55,6 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 
 // Hello will handle any requests to /hello with a greating.
 func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
-	// We will always succeed in saying hello
-	w.WriteHeader(http.StatusOK)
 
 	// Fetch Custom greeting from the DB
 	g, err := db.Get("greeting")
@@ -66,7 +66,11 @@ func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 			"headers":        r.Header,
 			"content-length": r.ContentLength,
 		}).Debugf("Could not fetch data from database - %s", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
+
+	w.WriteHeader(http.StatusOK)
 
 	// Print greeting or say hello
 	if len(g) > 0 {

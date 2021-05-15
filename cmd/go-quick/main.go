@@ -13,6 +13,7 @@ func main() {
 
 	// Setup Config
 	cfg := viper.New()
+
 	// Set Default Configs
 	cfg.SetDefault("enable_tls", true)
 	cfg.SetDefault("listen_addr", "0.0.0.0:8443")
@@ -29,7 +30,7 @@ func main() {
 		case viper.ConfigFileNotFoundError:
 			log.Warnf("No Config file found, loaded config from Environment - Default path ./conf")
 		default:
-			log.Warnf("Error when Fetching Configuration - %s", err)
+			log.Fatalf("Error when Fetching Configuration - %s", err)
 		}
 	}
 
