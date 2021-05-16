@@ -1,5 +1,5 @@
 /*
-Package Go Quick
+Package go-quick
 
 This project is a boilerplate web application written in Go (Golang).
 
@@ -14,4 +14,4 @@ The easiest way to get started with this project is to run it locally via Docker
 Once running, you can interact with the API via http://localhost/hello
 
 */
-package example
+package go-quick
