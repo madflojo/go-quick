@@ -3,7 +3,7 @@
 [![PkgGoDev](https://pkg.go.dev/badge/github.com/madflojo/go-quick)](https://pkg.go.dev/github.com/madflojo/go-quick)
 [![Go Report Card](https://goreportcard.com/badge/github.com/madflojo/go-quick)](https://goreportcard.com/report/github.com/madflojo/go-quick)
 [![Build Status](https://travis-ci.com/madflojo/go-quick.svg?branch=main)](https://travis-ci.com/madflojo/go-quick)
-[![Coverage Status](https://coveralls.io/repos/github/madflojo/go-quick/badge.svg)](https://coveralls.io/github/madflojo/go-quick)
+[![Coverage Status](https://coveralls.io/repos/github/madflojo/go-quick/badge.svg?branch=main)](https://coveralls.io/github/madflojo/go-quick?branch=main)
 
 This project is a boilerplate web application written in Go (Golang).
 
