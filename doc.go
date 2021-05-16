@@ -1,5 +1,5 @@
 /*
-Go Quick
+Package Go Quick
 
 This project is a boilerplate web application written in Go (Golang).
 

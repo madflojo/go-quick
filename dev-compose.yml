@@ -30,6 +30,7 @@ services:
       - "APP_DB_SERVER=redis:6379"
       - "APP_CONSUL_ADDR=consul:8500"
       - "APP_CONSUL_KEYS_PREFIX=go-quick/config"
+      - "CONSUL_HTTP_ADDR=consul:8500"
       - "CONSUL_HTTP_SSL=false"
     depends_on:
       - redis

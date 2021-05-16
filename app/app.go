@@ -77,7 +77,7 @@ func Run(c *viper.Viper) error {
 
 	// Config Reload
 	if cfg.GetInt("config_watch_interval") > 0 {
-		_, err = scheduler.Add(&tasks.Task{
+		_, err := scheduler.Add(&tasks.Task{
 			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
 			TaskFunc: func() error {
 				// Reload config using Viper's Watch capabilities
@@ -105,6 +105,9 @@ func Run(c *viper.Viper) error {
 				return nil
 			},
 		})
+		if err != nil {
+			log.Errorf("Error scheduling Config watcher - %s", err)
+		}
 	}
 
 	// Setup the DB Connection

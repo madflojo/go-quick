@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"github.com/madflojo/testcerts"
 	"github.com/spf13/viper"
+	_ "github.com/spf13/viper/remote"
 	"net/http"
 	"os"
 	"testing"
@@ -58,6 +59,7 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("config_watch_interval", 5)
+	cfg.Set("use_consul", true)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
 	go func() {
@@ -111,6 +113,10 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("key_file", "/tmp/key")
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("listen_addr", "localhost:9000")
+	cfg.Set("config_watch_interval", 1)
+	cfg.AddRemoteProvider("consul", "consul:8500", "go-quick/config")
+	cfg.SetConfigType("json")
+	_ = cfg.ReadRemoteConfig()
 
 	// Start Server in goroutine
 	go func() {
