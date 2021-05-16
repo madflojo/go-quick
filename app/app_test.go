@@ -33,6 +33,14 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("key_file", "/tmp/doesntexist")
 	cfgs["invalid TLS Config"] = v
 
+	// Invalid DB Address
+	v = viper.New()
+	v.Set("enable_tls", false)
+	v.Set("listen_addr", "0.0.0.0:8443")
+	v.Set("disable_logging", true)
+	v.Set("db_server", "")
+	cfgs["invalid DB Address"] = v
+
 	// Loop through bad configs, creating sub-tests as we go
 	for k, v := range cfgs {
 		t.Run("Testing "+k, func(t *testing.T) {
