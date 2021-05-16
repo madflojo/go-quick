@@ -1,6 +1,4 @@
-// Package goquick
-// 
-// This project is a boilerplate web application written in Go (Golang).
+// Package goquick is a boilerplace web application written in Go (Golang).
 // 
 // Starting a new Go Project and wish you had a basic application you could use as a starting point? Want to learn Go but don't know how to structure your project?
 // 
