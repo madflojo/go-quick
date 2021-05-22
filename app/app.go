@@ -208,6 +208,9 @@ func Run(c *viper.Viper) error {
 
 // Stop is used to gracefully shutdown the server.
 func Stop() {
-	defer srv.httpServer.Shutdown(context.Background())
+	err := srv.httpServer.Shutdown(context.Background())
+	if err != nil {
+		log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
+	}
 	defer runCancel()
 }

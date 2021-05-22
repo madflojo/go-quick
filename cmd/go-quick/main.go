@@ -37,7 +37,10 @@ func main() {
 	// Load Config from Consul
 	if cfg.GetBool("use_consul") {
 		log.Infof("Setting up Consul Config source - %s/%s", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
-		cfg.AddRemoteProvider("consul", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
+		err = cfg.AddRemoteProvider("consul", cfg.GetString("consul_addr"), cfg.GetString("consul_keys_prefix"))
+		if err != nil {
+			log.Fatalf("Error adding Consul as a remote Configuration Provider - %s", err)
+		}
 		cfg.SetConfigType("json")
 		err = cfg.ReadRemoteConfig()
 		if err != nil {

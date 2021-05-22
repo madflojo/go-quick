@@ -122,7 +122,10 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("db_server", "redis:6379")
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
-	cfg.AddRemoteProvider("consul", "consul:8500", "go-quick/config")
+	err = cfg.AddRemoteProvider("consul", "consul:8500", "go-quick/config")
+	if err != nil {
+		t.Fatalf("Failed to create Consul config provider - %s", err)
+	}
 	cfg.SetConfigType("json")
 	_ = cfg.ReadRemoteConfig()
 
