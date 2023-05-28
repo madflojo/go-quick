@@ -8,26 +8,17 @@ import (
 	"net/http"
 )
 
-// server is used as an interface for managing the HTTP server.
-type server struct {
-	// httpServer is the primary HTTP server.
-	httpServer *http.Server
-
-	// httpRouter is used to store and access the HTTP Request Router.
-	httpRouter *httprouter.Router
-}
-
 // Health is used to handle HTTP Health requests to this service. Use this for liveness
 // probes or any other checks which only validate if the services is running.
-func (s *server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (srv *Server) Health(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	w.WriteHeader(http.StatusOK)
 }
 
 // Ready is used to handle HTTP Ready requests to this service. Use this for readiness
 // probes or any checks that validate the service is ready to accept traffic.
-func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (srv *Server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	// Check other stuff here like DB connectivity, health of dependent services, etc.
-	err := db.HealthCheck()
+	err := srv.kv.HealthCheck()
 	if err != nil {
 		w.WriteHeader(http.StatusServiceUnavailable)
 		return
@@ -37,10 +28,10 @@ func (s *server) Ready(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 
 // middleware is used to intercept incoming HTTP calls and apply general functions upon
 // them. e.g. Metrics, Logging...
-func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
+func (srv *Server) middleware(n httprouter.Handle) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 		// Log the basics
-		log.WithFields(logrus.Fields{
+		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
@@ -54,12 +45,12 @@ func (s *server) middleware(n httprouter.Handle) httprouter.Handle {
 }
 
 // Hello will handle any requests to /hello with a greating.
-func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (srv *Server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 
 	// Fetch Custom greeting from the DB
-	g, err := db.Get("greeting")
+	g, err := srv.kv.Get("greeting")
 	if err != nil {
-		log.WithFields(logrus.Fields{
+		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
@@ -81,10 +72,10 @@ func (s *server) Hello(w http.ResponseWriter, r *http.Request, ps httprouter.Par
 }
 
 // SetHello will handle any update requests to /hello to store our greating.
-func (s *server) SetHello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
+func (srv *Server) SetHello(w http.ResponseWriter, r *http.Request, ps httprouter.Params) {
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		log.WithFields(logrus.Fields{
+		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,
@@ -95,9 +86,9 @@ func (s *server) SetHello(w http.ResponseWriter, r *http.Request, ps httprouter.
 		return
 	}
 
-	err = db.Set("greeting", body)
+	err = srv.kv.Set("greeting", body)
 	if err != nil {
-		log.WithFields(logrus.Fields{
+		srv.log.WithFields(logrus.Fields{
 			"method":         r.Method,
 			"remote-addr":    r.RemoteAddr,
 			"http-protocol":  r.Proto,

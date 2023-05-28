@@ -25,118 +25,143 @@ var (
 	ErrShutdown = fmt.Errorf("application shutdown gracefully")
 )
 
-// srv is the global reference for the HTTP Server.
-var srv *server
+// Server represents the main server structure.
+type Server struct {
+	// cfg is used across the app package to contain configuration.
+	cfg *viper.Viper
 
-// db is the global reference for the DB Server.
-var db hord.Database
+	// httpRouter is used to store and access the HTTP Request Router.
+	httpRouter *httprouter.Router
 
-// runCtx is a global context used to control shutdown of the application.
-var runCtx context.Context
+	// httpServer is the primary HTTP server.
+	httpServer *http.Server
 
-// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
-var runCancel context.CancelFunc
+	// kv is the global reference for the K/V Store.
+	kv hord.Database
 
-// cfg is used across the app package to contain configuration.
-var cfg *viper.Viper
+	// log is used across the app package for logging.
+	log *logrus.Logger
 
-// log is used across the app package for logging.
-var log *logrus.Logger
+	// runCancel is a global context cancelFunc used to trigger the shutdown of applications.
+	runCancel context.CancelFunc
 
-// scheduler is a internal task scheduler for recurring tasks
-var scheduler *tasks.Scheduler
+	// runCtx is a global context used to control shutdown of the application.
+	runCtx context.Context
 
-// Run starts the primary application. It handles starting background services,
-// populating package globals & structures, and clean up tasks.
-func Run(c *viper.Viper) error {
-	var err error
+	// scheduler is an internal task scheduler for recurring tasks.
+	scheduler *tasks.Scheduler
+}
+
+// New creates a new instance of the Server struct.
+// It takes a `cfg` parameter of type `*viper.Viper` for configuration.
+// It returns a pointer to the created Server instance.
+func New(cfg *viper.Viper) *Server {
+	srv := &Server{cfg: cfg}
 
 	// Create App Context
-	runCtx, runCancel = context.WithCancel(context.Background())
-
-	// Apply config provided by main to the package global
-	cfg = c
+	srv.runCtx, srv.runCancel = context.WithCancel(context.Background())
 
 	// Initiate a new logger
-	log = logrus.New()
-	if cfg.GetBool("debug") {
-		log.Level = logrus.DebugLevel
-		log.Debug("Enabling Debug Logging")
+	srv.log = logrus.New()
+	if srv.cfg.GetBool("debug") {
+		srv.log.Level = logrus.DebugLevel
+		srv.log.Debug("Enabling Debug Logging")
 	}
-	if cfg.GetBool("trace") {
-		log.Level = logrus.TraceLevel
-		log.Debug("Enabling Trace Logging")
+	if srv.cfg.GetBool("trace") {
+		srv.log.Level = logrus.TraceLevel
+		srv.log.Debug("Enabling Trace Logging")
 	}
-	if cfg.GetBool("disable_logging") {
-		log.Level = logrus.FatalLevel
+	if srv.cfg.GetBool("disable_logging") {
+		srv.log.Level = logrus.FatalLevel
+	}
+
+  return srv
+
+}
+	
+// Run starts the primary application. It handles starting background services,
+// populating package globals & structures, and clean up tasks.
+func (srv *Server) Run() error {
+	var err error
+
+	// Initiate a new logger
+	srv.log = logrus.New()
+	if srv.cfg.GetBool("debug") {
+		srv.log.Level = logrus.DebugLevel
+		srv.log.Debug("Enabling Debug Logging")
+	}
+	if srv.cfg.GetBool("trace") {
+		srv.log.Level = logrus.TraceLevel
+		srv.log.Debug("Enabling Trace Logging")
+	}
+	if srv.cfg.GetBool("disable_logging") {
+		srv.log.Level = logrus.FatalLevel
 	}
 
 	// Setup Scheduler
-	scheduler = tasks.New()
-	defer scheduler.Stop()
+	srv.scheduler = tasks.New()
+	defer srv.scheduler.Stop()
 
 	// Config Reload
-	if cfg.GetInt("config_watch_interval") > 0 {
-		_, err := scheduler.Add(&tasks.Task{
-			Interval: time.Duration(cfg.GetInt("config_watch_interval")) * time.Second,
+	if srv.cfg.GetInt("config_watch_interval") > 0 {
+		_, err := srv.scheduler.Add(&tasks.Task{
+			Interval: time.Duration(srv.cfg.GetInt("config_watch_interval")) * time.Second,
 			TaskFunc: func() error {
 				// Reload config using Viper's Watch capabilities
-				err := cfg.WatchRemoteConfig()
+				err := srv.cfg.WatchRemoteConfig()
 				if err != nil {
 					return err
 				}
 
 				// Support hot enable/disable of debug logging
-				if cfg.GetBool("debug") {
-					log.Level = logrus.DebugLevel
+				if srv.cfg.GetBool("debug") {
+					srv.log.Level = logrus.DebugLevel
 				}
 
 				// Support hot enable/disable of trace logging
-				if cfg.GetBool("trace") {
-					log.Level = logrus.TraceLevel
+				if srv.cfg.GetBool("trace") {
+					srv.log.Level = logrus.TraceLevel
 				}
 
 				// Support hot enable/disable of all logging
-				if cfg.GetBool("disable_logging") {
-					log.Level = logrus.FatalLevel
+				if srv.cfg.GetBool("disable_logging") {
+					srv.log.Level = logrus.FatalLevel
 				}
 
-				log.Tracef("Config reloaded from Consul")
+				srv.log.Tracef("Config reloaded from Consul")
 				return nil
 			},
 		})
 		if err != nil {
-			log.Errorf("Error scheduling Config watcher - %s", err)
+			srv.log.Errorf("Error scheduling Config watcher - %s", err)
 		}
 	}
 
 	// Setup the DB Connection
-	db, err = redis.Dial(redis.Config{
-		Server:   cfg.GetString("db_server"),
-		Password: cfg.GetString("db_password"),
+	srv.kv, err = redis.Dial(redis.Config{
+		Server:   srv.cfg.GetString("kv_server"),
+		Password: srv.cfg.GetString("kv_password"),
 	})
 	if err != nil {
 		return fmt.Errorf("could not establish database connection - %s", err)
 	}
-	defer db.Close()
+	defer srv.kv.Close()
 
 	// Initialize the DB
-	err = db.Setup()
+	err = srv.kv.Setup()
 	if err != nil {
 		return fmt.Errorf("could not setup database - %s", err)
 	}
 
 	// Setup the HTTP Server
-	srv = &server{
-		httpRouter: httprouter.New(),
-	}
+	srv.httpRouter = httprouter.New()
 	srv.httpServer = &http.Server{
-		Addr:    cfg.GetString("listen_addr"),
+		Addr:    srv.cfg.GetString("listen_addr"),
 		Handler: srv.httpRouter,
 	}
 
 	// Setup TLS Configuration
-	if cfg.GetBool("enable_tls") {
+	if srv.cfg.GetBool("enable_tls") {
 		srv.httpServer.TLSConfig = &tls.Config{
 			MinVersion: tls.VersionTLS12,
 			CipherSuites: []uint16{
@@ -154,19 +179,19 @@ func Run(c *viper.Viper) error {
 
 		// Wait for a signal then action
 		s := <-trap
-		log.Infof("Received shutdown signal %s", s)
+		srv.log.Infof("Received shutdown signal %s", s)
 
 		// Shutdown the HTTP Server
 		err := srv.httpServer.Shutdown(context.Background())
 		if err != nil {
-			log.Errorf("Received errors when shutting down HTTP sessions %s", err)
+			srv.log.Errorf("Received errors when shutting down HTTP sessions %s", err)
 		}
 
 		// Close DB Sessions
-		db.Close()
+		srv.kv.Close()
 
 		// Shutdown the app via runCtx
-		runCancel()
+		srv.runCancel()
 	}()
 
 	// Register Health Check Handler used for Liveness checks
@@ -181,13 +206,13 @@ func Run(c *viper.Viper) error {
 	srv.httpRouter.PUT("/hello", srv.middleware(srv.SetHello))
 
 	// Start HTTP Listener
-	log.Infof("Starting Listener on %s", cfg.GetString("listen_addr"))
-	if cfg.GetBool("enable_tls") {
-		err := srv.httpServer.ListenAndServeTLS(cfg.GetString("cert_file"), cfg.GetString("key_file"))
+	srv.log.Infof("Starting Listener on %s", srv.cfg.GetString("listen_addr"))
+	if srv.cfg.GetBool("enable_tls") {
+		err := srv.httpServer.ListenAndServeTLS(srv.cfg.GetString("cert_file"), srv.cfg.GetString("key_file"))
 		if err != nil {
 			if err == http.ErrServerClosed {
 				// Wait until all outstanding requests are done
-				<-runCtx.Done()
+				<-srv.runCtx.Done()
 				return ErrShutdown
 			}
 			return err
@@ -197,7 +222,7 @@ func Run(c *viper.Viper) error {
 	if err != nil {
 		if err == http.ErrServerClosed {
 			// Wait until all outstanding requests are done
-			<-runCtx.Done()
+			<-srv.runCtx.Done()
 			return ErrShutdown
 		}
 		return err
@@ -207,10 +232,10 @@ func Run(c *viper.Viper) error {
 }
 
 // Stop is used to gracefully shutdown the server.
-func Stop() {
+func (srv *Server) Stop() {
 	err := srv.httpServer.Shutdown(context.Background())
 	if err != nil {
-		log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
+		srv.log.Errorf("Unexpected error while shutting down HTTP server - %s", err)
 	}
-	defer runCancel()
+	defer srv.runCancel()
 }
