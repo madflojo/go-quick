@@ -20,7 +20,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "pandasdonotbelonghere")
 	v.Set("disable_logging", true)
-	v.Set("db_server", "redis:6379")
+	v.Set("kv_server", "redis:6379")
 	cfgs["invalid listener address"] = v
 
 	// Invalid TLS config
@@ -28,7 +28,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", true)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("db_server", "redis:6379")
+	v.Set("kv_server", "redis:6379")
 	v.Set("cert_file", "/tmp/doesntexist")
 	v.Set("key_file", "/tmp/doesntexist")
 	cfgs["invalid TLS Config"] = v
@@ -38,7 +38,7 @@ func TestBadConfigs(t *testing.T) {
 	v.Set("enable_tls", false)
 	v.Set("listen_addr", "0.0.0.0:8443")
 	v.Set("disable_logging", true)
-	v.Set("db_server", "")
+	v.Set("kv_server", "")
 	cfgs["invalid DB Address"] = v
 
 	// Loop through bad configs, creating sub-tests as we go
@@ -46,14 +46,15 @@ func TestBadConfigs(t *testing.T) {
 		t.Run("Testing "+k, func(t *testing.T) {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Duration(5)*time.Second))
 			defer cancel()
+			srv := New(v)
 			go func() {
 				<-ctx.Done()
 				err := ctx.Err()
 				if err == context.DeadlineExceeded {
-					Stop()
+					srv.Stop()
 				}
 			}()
-			err := Run(v)
+			err := srv.Run()
 			if err == nil || err == ErrShutdown {
 				t.Errorf("Expected error when starting server, got nil")
 			}
@@ -65,19 +66,20 @@ func TestRunningServer(t *testing.T) {
 	cfg := viper.New()
 	cfg.Set("disable_logging", true)
 	cfg.Set("listen_addr", "localhost:9000")
-	cfg.Set("db_server", "redis:6379")
+	cfg.Set("kv_server", "redis:6379")
 	cfg.Set("config_watch_interval", 5)
 	cfg.Set("use_consul", true)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
@@ -90,10 +92,11 @@ func TestRunningServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check Scheduler is set", func(t *testing.T) {
-		if len(scheduler.Tasks()) == 0 {
+		if len(srv.scheduler.Tasks()) == 0 {
 			t.Errorf("Expected scheduler to have at least one task")
 		}
 	})
@@ -119,7 +122,7 @@ func TestRunningTLSServer(t *testing.T) {
 	cfg.Set("enable_consul", true)
 	cfg.Set("cert_file", "/tmp/cert")
 	cfg.Set("key_file", "/tmp/key")
-	cfg.Set("db_server", "redis:6379")
+	cfg.Set("kv_server", "redis:6379")
 	cfg.Set("listen_addr", "localhost:9000")
 	cfg.Set("config_watch_interval", 1)
 	err = cfg.AddRemoteProvider("consul", "consul:8500", "go-quick/config")
@@ -130,14 +133,15 @@ func TestRunningTLSServer(t *testing.T) {
 	_ = cfg.ReadRemoteConfig()
 
 	// Start Server in goroutine
+	srv := New(cfg)
 	go func() {
-		err := Run(cfg)
+		err := srv.Run()
 		if err != nil && err != ErrShutdown {
 			t.Errorf("Run unexpectedly stopped - %s", err)
 		}
 	}()
 	// Clean up
-	defer Stop()
+	defer srv.Stop()
 
 	// Wait for app to start
 	time.Sleep(10 * time.Second)
@@ -151,6 +155,7 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check Ready HTTP Handler", func(t *testing.T) {
@@ -162,10 +167,11 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	// Kill the DB sessions for unhappy path testing
-	db.Close()
+	srv.kv.Close()
 
 	t.Run("Check Ready HTTP Handler with DB Stopped", func(t *testing.T) {
 		r, err := http.Get("https://localhost:9000/ready")
@@ -176,6 +182,7 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 }

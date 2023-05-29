@@ -6,8 +6,8 @@
 if [ -f /run/secrets/password ]
 then
   echo "Loading DB password from secrets file"
-  APP_DB_PASSWORD=$(cat /run/secrets/password)
-  export APP_DB_PASSWORD
+  APP_KV_PASSWORD=$(cat /run/secrets/password)
+  export APP_KV_PASSWORD
 fi
 
 ## Run the Application
