@@ -36,6 +36,7 @@ func TestHandlers(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when updating greeting - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check greeting", func(t *testing.T) {
@@ -53,6 +54,7 @@ func TestHandlers(t *testing.T) {
 		if string(body) != string([]byte("Howdie")) {
 			t.Errorf("Unexpected reply from http response - got %s", body)
 		}
+		defer r.Body.Close()
 	})
 
 	// Close DB for error checks
@@ -66,6 +68,7 @@ func TestHandlers(t *testing.T) {
 		if r.StatusCode != 500 {
 			t.Errorf("Unexpected http status code when updating greeting - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check greeting with DB Closed", func(t *testing.T) {
@@ -83,6 +86,7 @@ func TestHandlers(t *testing.T) {
 		if string(body) == string([]byte("Howdie2")) {
 			t.Errorf("Unexpected reply from http response - got %s", body)
 		}
+		defer r.Body.Close()
 	})
 
 }

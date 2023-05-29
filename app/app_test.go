@@ -92,6 +92,7 @@ func TestRunningServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check Scheduler is set", func(t *testing.T) {
@@ -154,6 +155,7 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking health - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	t.Run("Check Ready HTTP Handler", func(t *testing.T) {
@@ -165,6 +167,7 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 200 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 	// Kill the DB sessions for unhappy path testing
@@ -179,6 +182,7 @@ func TestRunningTLSServer(t *testing.T) {
 		if r.StatusCode != 503 {
 			t.Errorf("Unexpected http status code when checking readiness - %d", r.StatusCode)
 		}
+		defer r.Body.Close()
 	})
 
 }
