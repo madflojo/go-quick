@@ -15,7 +15,7 @@ func TestHandlers(t *testing.T) {
 	cfg.Set("listen_addr", "localhost:9001")
 	cfg.Set("kv_server", "redis:6379")
 	cfg.Set("config_watch_interval", 5)
-  srv := New(cfg)
+	srv := New(cfg)
 	go func() {
 		err := srv.Run()
 		if err != nil && err != ErrShutdown {

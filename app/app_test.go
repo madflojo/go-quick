@@ -46,7 +46,7 @@ func TestBadConfigs(t *testing.T) {
 		t.Run("Testing "+k, func(t *testing.T) {
 			ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Duration(5)*time.Second))
 			defer cancel()
-      srv := New(v)
+			srv := New(v)
 			go func() {
 				<-ctx.Done()
 				err := ctx.Err()
@@ -71,7 +71,7 @@ func TestRunningServer(t *testing.T) {
 	cfg.Set("use_consul", true)
 	cfg.Set("debug", true)
 	cfg.Set("trace", true)
-  srv := New(cfg)
+	srv := New(cfg)
 	go func() {
 		err := srv.Run()
 		if err != nil && err != ErrShutdown {
@@ -132,7 +132,7 @@ func TestRunningTLSServer(t *testing.T) {
 	_ = cfg.ReadRemoteConfig()
 
 	// Start Server in goroutine
-  srv := New(cfg)
+	srv := New(cfg)
 	go func() {
 		err := srv.Run()
 		if err != nil && err != ErrShutdown {

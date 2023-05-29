@@ -75,10 +75,10 @@ func New(cfg *viper.Viper) *Server {
 		srv.log.Level = logrus.FatalLevel
 	}
 
-  return srv
+	return srv
 
 }
-	
+
 // Run starts the primary application. It handles starting background services,
 // populating package globals & structures, and clean up tasks.
 func (srv *Server) Run() error {

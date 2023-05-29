@@ -6,8 +6,7 @@
 //
 // The easiest way to get started with this project is to run it locally via Docker Compose. Just follow the instructions below, and you will have an entire local instance with dependencies running.
 //
-//   $ docker compose up go-quick
+//	$ docker compose up go-quick
 //
 // Once running, you can interact with the API via http://localhost/hello
-//
 package goquick

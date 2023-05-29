@@ -53,8 +53,8 @@ func main() {
 	}
 
 	// Run application
-  srv := app.New(cfg)
-  defer srv.Stop()
+	srv := app.New(cfg)
+	defer srv.Stop()
 	err = srv.Run()
 	if err != nil && err != app.ErrShutdown {
 		log.Fatalf("Service stopped - %s", err)
